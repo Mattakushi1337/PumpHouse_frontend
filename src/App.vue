@@ -1,9 +1,12 @@
 <template>
   <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
+    <router-link to="/">Дачники</router-link> |
+    <router-link to="/create-resident"> Добавить дачника</router-link>|
+    <router-link to="/all-periods">Сроки</router-link>| 
+    <router-link to="/all-bills">Должники</router-link>
+
   </nav>
-  <router-view/>
+  <router-view />
 </template>
 
 <style>
@@ -21,10 +24,10 @@ nav {
 
 nav a {
   font-weight: bold;
-  color: #2c3e50;
+  color: #0481f7;
 }
 
 nav a.router-link-exact-active {
-  color: #42b983;
+  color: #5d6461;
 }
 </style>
