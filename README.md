@@ -1,20 +1,9 @@
-# pumphouse_frontend
+Для развёртки проекта нужно:
+1. git clone git@github.com:Mattakushi1337/PumpHouse_frontend.git // клонируем этот репозиторий
+2. cd pumphouse_frontend // переходим в директорию проекта
+3. npm install // устанавливаем зависимости
+4. npm run build // делаем сборку
+5. npm run serve // запускаем
 
-## Project setup
-```
-npm install
-```
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
 
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
-# PumpHouse_frontend
