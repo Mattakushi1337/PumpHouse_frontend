@@ -20,17 +20,28 @@
         <div v-if="periodsFromServer.length > 0">
             <h2>Список всех периодов</h2>
             <ul>
-                <li v-for="period in periodsFromServer" :key="period.id" class="period">
+                <li v-for="period in periodsFromServer" :key="period.id">
                     <strong>Начальная дата:</strong> {{ period.begin_date }}, <strong>Конечная дата:</strong> {{
                         period.end_date }}
+
                     <template v-if="!period.isEditing">
                         <span>Цена: {{ period.water_cost }}</span>
                         <i class="fas fa-edit" @click="enableEditing(period)"></i>
                     </template>
                     <template v-else>
                         <input type="number" v-model="period.editedCost" id="water_cost" required>
-                        <button @click="saveCost(period)">Сохранить</button>
+                        <button @click="saveCost(period)">Сохранить цену</button>
                     </template>
+
+                    <template v-if="!period.isEditingVolume">
+                        <span>Счётчик: {{ period.amount_volume }}</span>
+                        <i class="fas fa-edit" @click="enableEditingVolume(period)"></i>
+                    </template>
+                    <template v-else>
+                        <input type="number" v-model="period.editedVolume" id="amount_volume" required>
+                        <button @click="saveVolume(period)">Сохранить счётчик</button>
+                    </template>
+
                     <button @click="bill(period)">Выставить счета</button>
                 </li>
             </ul>
@@ -47,6 +58,7 @@ export default {
         return {
             periods: [{ selectedYear: null, selectedMonth: null, startDate: null, endDate: null }],
             periodsFromServer: [],
+
             years: Array.from({ length: 10 }, (_, i) => moment().year() + i),
             months: [
                 'Январь',
@@ -69,20 +81,29 @@ export default {
     },
     created() {
         this.loadCostsForPeriods();
+        this.loadVolumeForPeriods();
     },
 
     methods: {
         enableEditing(period) {
             period.isEditing = true;
             period.editedCost = period.water_cost;
+            period.isEditingVolume = false;
         },
+
+        enableEditingVolume(period) {
+            period.isEditingVolume = true;
+            period.editedVolume = period.amount_volume;
+            period.isEditing = false;
+        },
+
         fetchPeriodsFromServer() {
             axios.get('http://127.0.0.1:8000/period')
                 .then(response => {
                     this.periodsFromServer = response.data;
 
-                    // Загружаем цены для каждого периода
                     this.loadCostsForPeriods();
+                    this.loadVolumeForPeriods();
                 })
                 .catch(error => {
                     console.error('Ошибка при получении списка периодов:', error);
@@ -98,6 +119,18 @@ export default {
                     console.error('Ошибка при получении цены для периода:', error);
                 }
             });
+        },
+
+        loadVolumeForPeriods() {
+            this.periodsFromServer.forEach(async period => {
+                try {
+                    const response = await axios.get(`http://127.0.0.1:8000/period/${period.id}/volume`);
+                    period.amount_volume = response.data[0].amount_volume;
+                    period.isEditing = false;
+                } catch (error) {
+                    console.error('Ошибка при получении счётчика для периода:', error);
+                }
+            })
         },
         updateEndDate(index) {
             const period = this.periods[index];
@@ -153,14 +186,14 @@ export default {
             const periodId = period.id;
             if (periodId) {
                 const costData = {
-                    water_cost: period.editedCost, // используем editedCost, чтобы сохранить изменения
+                    water_cost: period.editedCost,
                 };
 
                 axios.post(`http://127.0.0.1:8000/period/${periodId}/cost`, costData)
                     .then(response => {
                         console.log('Цена успешно обновлена:', response.data);
-                        period.isEditing = false; // После сохранения переключаем обратно в текстовый режим
-                        period.water_cost = period.editedCost; // Обновляем водную стоимость с сохраненными данными
+                        period.isEditing = false;
+                        period.water_cost = period.editedCost;
                     })
                     .catch(error => {
                         console.error('Ошибка при обновлении цены:', error);
@@ -169,7 +202,28 @@ export default {
                 console.error('Период с указанным ID не найден');
             }
         },
-    },
+        saveVolume(period) {
+            const periodId = period.id;
+            if (periodId) {
+                const volumeData = {
+                    amount_volume: period.editedVolume,
+                };
+
+                axios.post(`http://127.0.0.1:8000/period/${periodId}/volume`, volumeData)
+                    .then(response => {
+                        console.log('Счетчик успешно обновлен:', response.data);
+                        period.isEditingVolume = false;
+                        period.amount_volume = period.editedVolume;
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при обновлении счетчика:', error);
+                    });
+            } else {
+                console.error('Период с указанным ID не найден');
+            }
+        }
+
+    }
 };
 </script>
 <style>
